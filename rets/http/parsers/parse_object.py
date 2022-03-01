@@ -1,7 +1,6 @@
 import mimetypes
 from typing import Optional, Sequence
 import cgi
-from xmlrpc.client import boolean
 
 from requests import Response
 from requests.structures import CaseInsensitiveDict
@@ -12,7 +11,7 @@ from rets.http.data import Object
 from rets.http.parsers.parse import DEFAULT_ENCODING, ResponseLike, parse_xml
 
 
-def parse_object(response: Response, default_encoding: boolean = False) -> Sequence[Object]:
+def parse_object(response: Response, default_encoding: bool = False) -> Sequence[Object]:
     """
     Parse the response from a GetObject transaction. If there are multiple
     objects to be returned then the response should be a multipart response.
