@@ -29,7 +29,7 @@ def parse_object(response: Response, default_encoding: bool = False) -> Sequence
     return (object_,) if object_ is not None else ()
 
 
-def _parse_multipart(response: ResponseLike, default_encoding: boolean) -> Sequence[Object]:
+def _parse_multipart(response: ResponseLike, default_encoding: bool) -> Sequence[Object]:
     """
     RFC 2045 describes the format of an Internet message body containing a MIME message. The
     body contains one or more body parts, each preceded by a boundary delimiter line, and the
