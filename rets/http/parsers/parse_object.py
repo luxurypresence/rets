@@ -1,14 +1,56 @@
 import mimetypes
 from typing import Optional, Sequence
 import cgi
-
 from requests import Response
 from requests.structures import CaseInsensitiveDict
-from requests_toolbelt.multipart.decoder import MultipartDecoder
-
+from requests_toolbelt.multipart.decoder import MultipartDecoder, _split_on_find, _header_parser, ImproperBodyPartContentException, BodyPart
 from rets.errors import RetsApiError, RetsResponseError
 from rets.http.data import Object
 from rets.http.parsers.parse import DEFAULT_ENCODING, ResponseLike, parse_xml
+
+
+class CustomBodyPart(BodyPart):
+    def __init__(self, content, encoding):
+        self.encoding = encoding
+        headers = {}
+        # Split into header section (if any) and the content
+        if b'\r\n\r\n' in content or b'\r\n' in content:
+            first, self.content = _split_on_find(content, b'\r\n\r\n')
+            if first != b'':
+                headers = _header_parser(first.lstrip(), encoding)
+        else:
+            raise ImproperBodyPartContentException(
+                'content does not contain CR-LF-CR-LF'
+            )
+        self.headers = CaseInsensitiveDict(headers)
+
+
+class CustomMultipartDecoder(MultipartDecoder):
+    def __init__(self, content, content_type, encoding='utf-8'):
+        #: Original Content-Type header
+        self.content_type = content_type
+        #: Response body encoding
+        self.encoding = encoding
+        #: Parsed parts of the multipart response body
+        self.parts = tuple()
+        self._find_boundary()
+        self._parse_body(content)
+
+    def _parse_body(self, content):
+        boundary = b''.join((b'--', self.boundary))
+
+        def body_part(part):
+            fixed = MultipartDecoder._fix_first_part(part, boundary)
+            return CustomBodyPart(fixed, self.encoding)
+
+        def test_part(part):
+            return (part != b'' and
+                    part != b'\r\n' and
+                    part[:4] != b'--\r\n' and
+                    part != b'--')
+
+        parts = content.split(b''.join((b'\r\n', boundary)))
+        self.parts = tuple(body_part(x) for x in parts if test_part(x))
 
 
 def parse_object(response: Response, default_encoding: bool = False) -> Sequence[Object]:
@@ -63,7 +105,7 @@ def _parse_multipart(response: ResponseLike, default_encoding: bool) -> Sequence
     encoding = DEFAULT_ENCODING
     if not default_encoding:
         encoding = response.encoding or DEFAULT_ENCODING
-    multipart = MultipartDecoder.from_response(response, encoding)
+    multipart = CustomMultipartDecoder.from_response(response, encoding)
     # We need to decode the headers because MultipartDecoder returns bytes keys and values,
     # while requests.Response.headers uses str keys and values.
     for part in multipart.parts:
