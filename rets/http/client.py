@@ -233,6 +233,7 @@ class RetsHttpClient:
                    media_types: Union[str, Sequence[str]] = '*/*',
                    location: bool = False,
                    default_encoding: bool = False,
+                   custom_encoding: str = 'utf-8'
                    ) -> Sequence[Object]:
         """
         The GetObject transaction is used to retrieve structured information related to known
@@ -283,7 +284,7 @@ class RetsHttpClient:
             'Location': int(location),
         }
         response = self._http_request(self._url_for('GetObject'), headers=headers, payload=payload)
-        return parse_object(response, default_encoding)
+        return parse_object(response, default_encoding, custom_encoding)
 
     def _url_for(self, transaction: str) -> str:
         try:

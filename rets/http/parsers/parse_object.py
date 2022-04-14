@@ -53,7 +53,7 @@ class CustomMultipartDecoder(MultipartDecoder):
         self.parts = tuple(body_part(x) for x in parts if test_part(x))
 
 
-def parse_object(response: Response, default_encoding: bool = False) -> Sequence[Object]:
+def parse_object(response: Response, default_encoding: bool = False, custom_encoding: str = 'utf-8') -> Sequence[Object]:
     """
     Parse the response from a GetObject transaction. If there are multiple
     objects to be returned then the response should be a multipart response.
@@ -65,13 +65,13 @@ def parse_object(response: Response, default_encoding: bool = False) -> Sequence
     content_type = response.headers.get('content-type')
 
     if content_type and 'multipart/parallel' in content_type:
-        return _parse_multipart(response, default_encoding)
+        return _parse_multipart(response, default_encoding, custom_encoding)
 
     object_ = _parse_body_part(response)
     return (object_,) if object_ is not None else ()
 
 
-def _parse_multipart(response: ResponseLike, default_encoding: bool) -> Sequence[Object]:
+def _parse_multipart(response: ResponseLike, default_encoding: bool, custom_encoding: str) -> Sequence[Object]:
     """
     RFC 2045 describes the format of an Internet message body containing a MIME message. The
     body contains one or more body parts, each preceded by a boundary delimiter line, and the
@@ -104,7 +104,7 @@ def _parse_multipart(response: ResponseLike, default_encoding: bool) -> Sequence
     """
     encoding = DEFAULT_ENCODING
     if not default_encoding:
-        encoding = response.encoding or DEFAULT_ENCODING
+        encoding = response.encoding or custom_encoding or DEFAULT_ENCODING
     multipart = CustomMultipartDecoder.from_response(response, encoding)
     # We need to decode the headers because MultipartDecoder returns bytes keys and values,
     # while requests.Response.headers uses str keys and values.
