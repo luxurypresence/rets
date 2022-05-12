@@ -1,6 +1,7 @@
 import mimetypes
 from typing import Optional, Sequence
 import cgi
+import re
 from requests import Response
 from requests.structures import CaseInsensitiveDict
 from requests_toolbelt.multipart.decoder import MultipartDecoder, _split_on_find, _header_parser, ImproperBodyPartContentException, BodyPart
@@ -17,7 +18,7 @@ class CustomBodyPart(BodyPart):
         if b'\r\n\r\n' in content or b'\r\n' in content:
             first, self.content = _split_on_find(content, b'\r\n\r\n')
             if first != b'':
-                headers = _header_parser(first.lstrip(), encoding)
+                headers = _header_parser(re.sub(b'([^\r])\n', b' ', first.lstrip()), encoding)
         else:
             raise ImproperBodyPartContentException(
                 'content does not contain CR-LF-CR-LF'
