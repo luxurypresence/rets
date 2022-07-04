@@ -64,9 +64,14 @@ def parse_capability_urls(response: Response) -> dict:
     """
     elem = parse_xml(response)
     response_elem = elem.find('RETS-RESPONSE')
+    raw_arguments = None
     if response_elem is None:
-        return {}
-    raw_arguments = response_elem.text.strip().split('\n')
+        if elem.text:
+            raw_arguments = elem.text.strip().split('\n')
+        else:
+            return {}
+    else:
+        raw_arguments = response_elem.text.strip().split('\n')
     return dict((s.strip() for s in arg.split('=', 1)) for arg in raw_arguments)
 
 
