@@ -101,6 +101,7 @@ def parse_metadata(response: Response) -> Sequence[Metadata]:
             type_=elem.tag.split('-', 1)[1],
             resource=elem.get('Resource'),
             class_=elem.get('Class'),
+            lookup=elem.get('Lookup'),
             data=tuple(_parse_data(elem)),
         )
 
