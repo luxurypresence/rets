@@ -5,6 +5,7 @@ Metadata = namedtuple('Metadata', (
     'resource',
     'class_',
     'data',
+    'lookup',
 ))
 
 Object = namedtuple('Object', (
