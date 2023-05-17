@@ -105,7 +105,7 @@ def _parse_multipart(response: ResponseLike, default_encoding: bool, custom_enco
     """
     encoding = DEFAULT_ENCODING
     if not default_encoding:
-        encoding = response.encoding or custom_encoding or DEFAULT_ENCODING
+        encoding = custom_encoding or response.encoding or DEFAULT_ENCODING
     multipart = CustomMultipartDecoder.from_response(response, encoding)
     # We need to decode the headers because MultipartDecoder returns bytes keys and values,
     # while requests.Response.headers uses str keys and values.
